@@ -11,7 +11,7 @@ typedef struct nodo {
 } nodo_t;
 
 struct hash {
-	nodo_t **vector;
+	nodo_t **tabla;
 	int cantidad;
 	size_t capacidad;
 };
@@ -44,19 +44,26 @@ hash_t *hash_crear(size_t capacidad)
 		free(hash);
 		return NULL;
 	}
-	hash->vector = vector;
+	hash->tabla = vector;
 	return hash;
 }
-
-char *copia_string(const char *s)
+/*
+ *Pre: Recibe la clave que es un string
+ *Post: crear un copia de la clave y la devuelve.
+ */
+char *copia_string(const char *clave)
 {
-	char *p = malloc(strlen(s) + 1);
-	if (!p)
+	char *nueva_clave = malloc(strlen(clave) + 1);
+	if (!nueva_clave)
 		return NULL;
-	strcpy(p, s);
-	return p;
+	strcpy(nueva_clave, clave);
+	return nueva_clave;
 }
 
+/*
+ *Pre: Recibe la clave que un string y el elemento.
+ *Post reserva memoria para un nodo ,inicializa los cuampos con los campos y devuelve el puntero al nodo.
+ */
 nodo_t *crear_nodo(const char *clave, void *elemento)
 {
 	nodo_t *nodo = malloc(sizeof(nodo_t));
@@ -73,22 +80,51 @@ nodo_t *crear_nodo(const char *clave, void *elemento)
 	nodo->siguiente = NULL;
 	return nodo;
 }
-bool funcion(const char *clave, void *valor, void *aux)
+
+/*
+ *Pre:Recibe la clave con un valor cargado y el valor definido y el hash nuevo.
+ *Post: inserta nodos y devuelve false en caso de no poder insertarse.
+ */
+bool funcion_para_reinsertar(const char *clave, void *valor, void *hash)
 {
-	hash_t *nuevo_hash = aux;
+	hash_t *nuevo_hash = hash;
 
 	if (hash_insertar(nuevo_hash, clave, valor, NULL) == nuevo_hash)
 		return true;
 
 	return false;
 }
+
+/*
+ *Pre: Recibe el hash y un nodo inicializado.
+ *Post inserta el nodo el la posicion porrespondiente en la tabla de hash.
+ */
+void insertar_nodo(hash_t *hash, nodo_t *nodo)
+{
+	nodo->siguiente = NULL;
+	int posicion = (int)(funcion_de_hash(nodo->clave) % hash->capacidad);
+	nodo->siguiente = hash->tabla[posicion];
+	hash->tabla[posicion] = nodo;
+	hash->cantidad++;
+}
+
+/*
+ *Pre: Recibe el hash.
+ *Post: crea un nuevo hash con el doble de capacidad ,inserta todos los nodos en el nuevo hash , hace un intercambio de de los contenidos y destruye al
+ *		hash creado
+ */
 hash_t *rehash(hash_t *hash)
 {
 	hash_t *hash_nuevo = hash_crear(hash->capacidad * 2);
 	if (!hash_nuevo)
 		return NULL;
 
-	hash_con_cada_clave(hash, funcion, hash_nuevo);
+	size_t cantidad =
+		hash_con_cada_clave(hash, funcion_para_reinsertar, hash_nuevo);
+	if (cantidad != hash->cantidad) {
+		hash_destruir(hash);
+		return NULL;
+	}
 	hash_t aux = *hash;
 	*hash = *hash_nuevo;
 	*hash_nuevo = aux;
@@ -96,13 +132,6 @@ hash_t *rehash(hash_t *hash)
 	return hash;
 }
 
-void insertar_nodo(hash_t *hash, nodo_t *nodo)
-{
-	int posicion = (int)(funcion_de_hash(nodo->clave) % hash->capacidad);
-	nodo->siguiente = hash->vector[posicion];
-	hash->vector[posicion] = nodo;
-	hash->cantidad++;
-}
 hash_t *hash_insertar(hash_t *hash, const char *clave, void *elemento,
 		      void **anterior)
 {
@@ -120,14 +149,14 @@ hash_t *hash_insertar(hash_t *hash, const char *clave, void *elemento,
 	if (!nuevo_nodo)
 		return NULL;
 
-	if (hash->vector[posicion] == NULL) {
+	if (hash->tabla[posicion] == NULL) {
 		if (anterior)
 			*anterior = NULL;
 		insertar_nodo(hash, nuevo_nodo);
 		return hash;
 	}
 
-	nodo_t *actual = hash->vector[posicion];
+	nodo_t *actual = hash->tabla[posicion];
 	while (actual) {
 		if (strcmp(actual->clave, clave) == 0) {
 			if (anterior)
@@ -152,7 +181,7 @@ void *hash_quitar(hash_t *hash, const char *clave)
 		return NULL;
 
 	int posicion = (int)(funcion_de_hash(clave) % hash->capacidad);
-	nodo_t *actual = hash->vector[posicion];
+	nodo_t *actual = hash->tabla[posicion];
 	nodo_t *anterior = NULL;
 	while (actual != NULL) {
 		if (strcmp(actual->clave, clave) == 0) {
@@ -161,7 +190,7 @@ void *hash_quitar(hash_t *hash, const char *clave)
 				anterior->siguiente = actual->siguiente;
 			} else {
 				nodo_t *siguiente = actual->siguiente;
-				hash->vector[posicion] = siguiente;
+				hash->tabla[posicion] = siguiente;
 			}
 			free(actual->clave);
 			free(actual);
@@ -181,7 +210,7 @@ void *hash_obtener(hash_t *hash, const char *clave)
 		return NULL;
 
 	int posicion = (int)(funcion_de_hash(clave) % hash->capacidad);
-	nodo_t *actual = hash->vector[posicion];
+	nodo_t *actual = hash->tabla[posicion];
 
 	while (actual) {
 		if (strcmp(actual->clave, clave) == 0) {
@@ -197,7 +226,7 @@ bool hash_contiene(hash_t *hash, const char *clave)
 	if (!hash || !clave)
 		return false;
 	int posicion = (int)(funcion_de_hash(clave) % hash->capacidad);
-	nodo_t *actual = hash->vector[posicion];
+	nodo_t *actual = hash->tabla[posicion];
 
 	while (actual) {
 		if (strcmp(actual->clave, clave) == 0) {
@@ -221,7 +250,7 @@ void hash_destruir(hash_t *hash)
 		return;
 
 	for (int i = 0; i < hash->capacidad; i++) {
-		nodo_t *actual = hash->vector[i];
+		nodo_t *actual = hash->tabla[i];
 		while (actual) {
 			nodo_t *siguiente = actual->siguiente;
 			free(actual->clave);
@@ -231,7 +260,7 @@ void hash_destruir(hash_t *hash)
 	}
 	hash->cantidad = 0;
 	hash->capacidad = 0;
-	free(hash->vector);
+	free(hash->tabla);
 	free(hash);
 }
 
@@ -244,7 +273,7 @@ void hash_destruir_todo(hash_t *hash, void (*destructor)(void *))
 		return;
 	}
 	for (int i = 0; i < hash->capacidad; i++) {
-		nodo_t *actual = hash->vector[i];
+		nodo_t *actual = hash->tabla[i];
 		while (actual) {
 			destructor(actual->valor);
 			nodo_t *siguiente = actual->siguiente;
@@ -253,7 +282,7 @@ void hash_destruir_todo(hash_t *hash, void (*destructor)(void *))
 			actual = siguiente;
 		}
 	}
-	free(hash->vector);
+	free(hash->tabla);
 	free(hash);
 }
 
@@ -266,7 +295,7 @@ size_t hash_con_cada_clave(hash_t *hash,
 		return 0;
 
 	for (int i = 0; i < hash->capacidad; i++) {
-		nodo_t *actual = hash->vector[i];
+		nodo_t *actual = hash->tabla[i];
 		bool seguir = true;
 		while (actual && seguir) {
 			seguir = f(actual->clave, actual->valor, aux);

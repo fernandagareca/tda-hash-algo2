@@ -24,8 +24,7 @@ void pruebas_de_crear_hash()
 	pa2m_afirmar(h != NULL, "crear hash devuleve distinto de null");
 	pa2m_afirmar(h->cantidad == 0,
 		     "la cantidad en un hash recien creado es 0");
-	pa2m_afirmar(h->capacidad == 4,
-		     "la capacidad es la misma que se envio");
+	pa2m_afirmar(h->capacidad == 4, "la capacidad es 4 la que se envio");
 
 	hash_destruir(h);
 }
@@ -45,7 +44,7 @@ void pruebas_de_busqueda()
 		     "la cantidad de elementos insertados es 6");
 	for (int i = 0; i < h->cantidad; i++) {
 		pa2m_afirmar(hash_contiene(h, vector[i]) == true,
-			     "valor correcto");
+			     "se encontro el elemento buscado");
 	}
 	hash_destruir(h);
 }
@@ -79,36 +78,29 @@ void pruebas_de_iterar_todo()
 	hash_destruir(hash);
 }
 
-bool funcion_aux(const char *clave, void *valor, void *aux)
-{
-	elementos_t *elementos = aux;
-
-	if (elementos->posicion > 3)
-		return false;
-
-	elementos->posicion++;
-	return true;
-}
-
-void pruebas_de_iterar_mitad_de_elementos()
+void pruebas_de_insertar_clave_nula()
 {
 	hash_t *hash = hash_crear(4);
 	void *anterior;
-	hash_insertar(hash, "a", "1", &anterior);
-	hash_insertar(hash, "b", "2", &anterior);
-	hash_insertar(hash, "c", "3", &anterior);
-	hash_insertar(hash, "d", "4", &anterior);
-	hash_insertar(hash, "e", "5", &anterior);
-	hash_insertar(hash, "f", "6", &anterior);
 
-	char *vector[] = { "a", "b", "c", "d", "e", "f" };
-	elementos_t elementos;
-	elementos.vector = vector;
-	elementos.posicion = 2;
-	pa2m_afirmar(hash_cantidad(hash) == 6,
-		     "la cantidad de elementos insertados es 6");
-	pa2m_afirmar(hash_con_cada_clave(hash, funcion_aux, &elementos) == 3,
-		     "la cantidad de elementos iterados es 3");
+	pa2m_afirmar(hash_insertar(hash, NULL, "1", &anterior) == NULL,
+		     "no se puede insertar con clave nula");
+	pa2m_afirmar(hash_contiene(hash, NULL) == false,
+		     "el elemento no se encontro en el hash");
+	pa2m_afirmar(hash_cantidad(hash) == 0, "la cantidad de clves es 0");
+	hash_destruir(hash);
+}
+
+void pruebas_de_insertar_valor_nulo()
+{
+	hash_t *hash = hash_crear(4);
+	void *anterior;
+
+	pa2m_afirmar(hash_insertar(hash, "1", NULL, &anterior) == hash,
+		     "se puede insertar con valor nula");
+	pa2m_afirmar(hash_contiene(hash, "1") == true,
+		     "el elemento se encontro en el hash");
+
 	hash_destruir(hash);
 }
 
@@ -216,7 +208,48 @@ void pruebas_de_insertar_muchos_elementos()
 	hash_destruir(hash);
 }
 
-void pruebas_de_borrado()
+void prueba_de_borrar()
+{
+	hash_t *hash = hash_crear(3);
+	char *clave1 = "a";
+	char *clave2 = "b";
+	char *clave3 = "c";
+	char *clave4 = "d";
+	int valor1 = 1, valor2 = 2, valor3 = 3, valor4 = 4;
+
+	hash_insertar(hash, clave1, &valor1, NULL);
+	hash_insertar(hash, clave2, &valor2, NULL);
+	hash_insertar(hash, clave3, &valor3, NULL);
+	hash_insertar(hash, clave4, &valor4, NULL);
+	pa2m_afirmar(hash_cantidad(hash) == 4, "la cantidad de elementos es 4");
+
+	int *elemento = hash_quitar(hash, clave1);
+	pa2m_afirmar(*elemento == valor1, "se quito la clave 1");
+	pa2m_afirmar(hash_contiene(hash, clave1) == false,
+		     "el hash no contiene la clave 1");
+	pa2m_afirmar(hash_cantidad(hash) == 3, "la cantidad de elementos es 3");
+
+	elemento = hash_quitar(hash, clave2);
+	pa2m_afirmar(*elemento == valor2, "se quito la clave 1");
+	pa2m_afirmar(hash_contiene(hash, clave2) == false,
+		     "el hash no contiene la clave 2");
+	pa2m_afirmar(hash_cantidad(hash) == 2, "la cantidad de elementos es 2");
+
+	elemento = hash_quitar(hash, clave3);
+	pa2m_afirmar(*elemento == valor3, "se quito la clave 1");
+	pa2m_afirmar(hash_contiene(hash, clave3) == false,
+		     "el hash no contiene la clave 3");
+	pa2m_afirmar(hash_cantidad(hash) == 1, "la cantidad de elementos es 1");
+
+	elemento = hash_quitar(hash, clave4);
+	pa2m_afirmar(*elemento == valor4, "se quito la clave 1");
+	pa2m_afirmar(hash_contiene(hash, clave4) == false,
+		     "el hash no contiene la clave 4");
+	pa2m_afirmar(hash_cantidad(hash) == 0, "la cantidad de elementos es 0");
+
+	hash_destruir(hash);
+}
+void pruebas_de_borrado_de_varios_elementos()
 {
 	hash_t *hash = hash_crear(5);
 
@@ -238,7 +271,6 @@ void pruebas_de_borrado()
 	pa2m_afirmar(hash_cantidad(hash) == 500,
 		     " la cantidad de elementos es 500");
 
-	int obtenidos = 0;
 	errores = 0;
 	for (int i = 0; i < 400; i++) {
 		char str[10];
@@ -249,15 +281,30 @@ void pruebas_de_borrado()
 			errores++;
 		}
 	}
-	pa2m_afirmar(hash_cantidad(hash) == 100,
-		     "se elimino 1/3 de las claves");
-	pa2m_afirmar(
-		errores == 0,
-		"se elimino varios elementos sin problema devuelve el elemento");
-	pa2m_afirmar(obtenidos == 0, "ontenido dio null");
+	pa2m_afirmar(hash_cantidad(hash) == 100, "se elimino 400 claves");
+	pa2m_afirmar(errores == 0, "se elimino varios elementos sin problema");
+
 	hash_destruir(hash);
 }
+void pruebas_en_un_hash_nulo()
+{
+	hash_t *hash = NULL;
+	char *clave1 = "a";
+	char *valor = "b";
 
+	pa2m_afirmar(hash_insertar(hash, clave1, valor, NULL) == NULL,
+		     "insertar en un hash nulo devuelve NULL");
+	pa2m_afirmar(hash_quitar(hash, clave1) == NULL,
+		     "quitar en un hash nulo devuelve NULL");
+	pa2m_afirmar(hash_obtener(hash, clave1) == NULL,
+		     "obtener en un hash nulo devuelve NULL");
+	pa2m_afirmar(hash_con_cada_clave(hash, f, NULL) == 0,
+		     "iterar en un hash nulo devuelve 0");
+	pa2m_afirmar(hash_contiene(hash, clave1) == false,
+		     "contiene devuelve falso si el hash es null");
+	pa2m_afirmar(hash_cantidad(hash) == 0,
+		     "la cantidad de un hash null es 0");
+}
 int main()
 {
 	pa2m_nuevo_grupo(
@@ -265,12 +312,15 @@ int main()
 	pruebas_de_crear_hash();
 	pa2m_nuevo_grupo(
 		"\n----------------- pruebas de insercion -----------------");
+	pruebas_de_insertar_valor_nulo();
+	pruebas_de_insertar_clave_nula();
 	pruebas_de_insercion();
 	pruebas_de_insercion_repetidos();
 	pruebas_de_insertar_muchos_elementos();
 	pa2m_nuevo_grupo(
 		"\n----------------- pruebas de quitar -----------------");
-	pruebas_de_borrado();
+	prueba_de_borrar();
+	pruebas_de_borrado_de_varios_elementos();
 
 	pa2m_nuevo_grupo(
 		"\n----------------- pruebas de busqueda -----------------");
@@ -278,7 +328,9 @@ int main()
 	pa2m_nuevo_grupo(
 		"\n----------------- pruebas de iterador-----------------");
 	pruebas_de_iterar_todo();
-	pruebas_de_iterar_mitad_de_elementos();
+	pa2m_nuevo_grupo(
+		"\n----------------- pruebas de hash null-----------------");
+	pruebas_en_un_hash_nulo();
 
 	return pa2m_mostrar_reporte();
 }

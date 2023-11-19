@@ -64,7 +64,7 @@ char *copia_string(const char *clave)
  *Pre: Recibe la clave que un string y el elemento.
  *Post reserva memoria para un nodo ,inicializa los cuampos con los campos y devuelve el puntero al nodo.
  */
-nodo_t *crear_nodo(const char *clave, void *elemento)
+nodo_t *crear_nuevo_nodo(const char *clave, void *elemento)
 {
 	nodo_t *nodo = malloc(sizeof(nodo_t));
 	if (!nodo)
@@ -145,7 +145,7 @@ hash_t *hash_insertar(hash_t *hash, const char *clave, void *elemento,
 			return NULL;
 	}
 	int posicion = (int)(funcion_de_hash(clave) % hash->capacidad);
-	nodo_t *nuevo_nodo = crear_nodo(clave, elemento);
+	nodo_t *nuevo_nodo = crear_nuevo_nodo(clave, elemento);
 	if (!nuevo_nodo)
 		return NULL;
 

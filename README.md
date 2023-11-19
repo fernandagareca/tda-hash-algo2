@@ -53,7 +53,7 @@ typedef struct nodo {
 ## Funcionamiento de la memoria
 En el archivo `hash.c` en la función `hash_crear` se crea un puntero a un hash reservando memoria en el heap, que contiene un puntero a un vector de punteros a nodos en el heap donde cada posición apunta a un nodo que podría enlazarse con otro nodo, también se crean dos campos uno para la cantidad de elementos y otro para la capacidad del vector
 
-En la función `crear_nodo` se crea un puntero a nodo en el que se reserva memoria en el heap, el cual tiene un puntero al siguiente nodo que se le enlace, junto con un campo para la clave y el valor.
+En la función `crear_nuevo_nodo` se crea un puntero a nodo en el que se reserva memoria en el heap, el cual tiene un puntero al siguiente nodo que se le enlace, junto con un campo para la clave y el valor.
 
 
 <div align="center">

@@ -17,7 +17,7 @@ struct hash {
 };
 
 #define FACTOR_CARGA_MAXIMO 0.7
-const int CAPACIDAD_MINIMA = 3;
+const size_t CAPACIDAD_MINIMA = 3;
 
 unsigned long funcion_de_hash(const char *string)
 {

@@ -4,57 +4,74 @@
 
 # TDA HASH
 
-## Repositorio de (Nombre Apellido) - (Padrón) - (Mail)
+## Repositorio de Marianela Fernanda Gareca Janko - 109606 - fernanda.gareca321@gmail.com
 
 - Para compilar:
 
 ```bash
-línea de compilación
+make pruebas_chanutron
 ```
 
 - Para ejecutar:
 
 ```bash
-línea de ejecución
+./pruebas_chanutron
 ```
 
 - Para ejecutar con valgrind:
 ```bash
-línea con valgrind
+make valgrind-chanutron
 ```
 ---
 ##  Funcionamiento
 
-Explicación de cómo funcionan las estructuras desarrolladas en el TP y el funcionamiento general del mismo.
+Consiste en implementar un diccionario que es una estructura que almacena elementos con clave y valor, la cual mediante la función de hash nos devuelve una posición en la tabla de hash, la cual hace más directo el acceso a la hora de buscar los elementos, reduciendo la complejidad de búsqueda o haciéndola tender a o(1) en el caso que no hayan colisiones.
 
-Aclarar en esta parte todas las decisiones que se tomaron al realizar el TP, cosas que no se aclaren en el enunciado, fragmentos de código que necesiten explicación extra, etc.
 
-Incluír **EN TODOS LOS TPS** los diagramas relevantes al problema (mayormente diagramas de memoria para explicar las estructuras, pero se pueden utilizar otros diagramas si es necesario).
+## Estructuras:
 
-### Por ejemplo:
 
-El programa funciona abriendo el archivo pasado como parámetro y leyendolo línea por línea. Por cada línea crea un registro e intenta agregarlo al vector. La función de lectura intenta leer todo el archivo o hasta encontrar el primer error. Devuelve un vector con todos los registros creados.
-
-<div align="center">
-<img width="70%" src="img/diagrama1.svg">
-</div>
-
-En el archivo `sarasa.c` la función `funcion1` utiliza `realloc` para agrandar la zona de memoria utilizada para conquistar el mundo. El resultado de `realloc` lo guardo en una variable auxiliar para no perder el puntero original en caso de error:
+En las estructuras de hash use un vector dinamico de punteros a nodos para la tabla de hash ,otro campo cantidad para llevar una cuenta de cuantas claves almacenas tiene el hash ,tambien un campo capacidad para saber cual es el tamaño de la tabla.
 
 ```c
-int *vector = realloc(vector_original, (n+1)*sizeof(int));
 
-if(vector == NULL)
-    return -1;
-vector_original = vector;
+struct hash {
+	nodo_t **tabla;
+	int cantidad;
+	size_t capacidad;
+};
 ```
+La estructura de nodos contiene un string para guardar las clave que sera una cadena de caracteres,tambien hay un campo para el valor que puede ser cualquier cosa por eso el tipo es `void*` y por ultimo tiene un puntero al siguiente nodo que puede colicionar en la misma posicion.
+```c
+typedef struct nodo {
+	char *clave;
+	void *valor;
+	struct nodo *siguiente;
+} nodo_t;
+
+```
+## Funcionamiento de la memoria
+En el archivo `hash.c` en la función `hash_crear` se crea un puntero a un hash reservando memoria en el heap, que contiene un puntero a un vector de punteros a nodos en el heap donde cada posición apunta a un nodo que podría enlazarse con otro nodo, también se crean dos campos uno para la cantidad de elementos y otro para la capacidad del vector
+
+En la función `crear_nuevo_nodo` se crea un puntero a nodo en el que se reserva memoria en el heap, el cual tiene un puntero al siguiente nodo que se le enlace, junto con un campo para la clave y el valor.
 
 
 <div align="center">
-<img width="70%" src="img/diagrama2.svg">
+<img width="70%" src="img/diagrama.jpeg">
 </div>
 
 ---
 
 ## Respuestas a las preguntas teóricas
-Incluír acá las respuestas a las preguntas del enunciado (si aplica).
+
+
+
+# diccionario
+<div align="center">
+<img width="70%" src="img/diccionario.jpeg">
+</div>
+
+# Metodos de resolucioon de coliciones 
+<div align="center">
+<img width="70%" src="img/coliciones.jpeg">
+</div>
